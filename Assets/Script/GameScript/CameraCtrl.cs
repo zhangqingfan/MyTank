@@ -5,9 +5,9 @@ using UnityEngine;
 public class CameraCtrl : MonoBehaviour
 {
     public PlayerControll tankCtrl;
-    public float distance = 2f;
-    public float height = 1f;
-    public float scopeHeight = 0.6f;
+    public float distance;
+    public float height;
+    public float scopeHeight;
     private float initFOV;
 
     public static CameraCtrl instance { get; private set; }
@@ -19,13 +19,16 @@ public class CameraCtrl : MonoBehaviour
     private void Start()
     {
         initFOV = Camera.main.fieldOfView;
-
+        AttachLocalPlayer();
+    }
+    public void AttachLocalPlayer()
+    {
         var players = GameObject.FindObjectsOfType<PlayerControll>();
-        foreach(var p in players)
+        foreach (var p in players)
         {
             if (p.IsLocalPlayer == false)
                 continue;
-            
+
             tankCtrl = p;
             break;
         }
@@ -48,14 +51,21 @@ public class CameraCtrl : MonoBehaviour
     {
         Camera.main.fieldOfView = initFOV;
 
-        float h = Input.GetAxis("Mouse X") * 4;        
-        transform.RotateAround(turret.transform.position, turret.transform.forward, h);
+        float h = Input.GetAxis("Mouse X") * 4;   
+        float v = Input.GetAxis("Mouse Y") * 4;
+        transform.RotateAround(turret.transform.position, Vector3.up, h);
+        //transform.RotateAround(tankCtrl.transform.position, tankCtrl.transform.right, -v);
+
+        //transform.RotateAround(turret.transform.position, Vector3.up, h);
+        //transform.RotateAround(tankCtrl.transform.position, Vector3.right, -v);
+
 
         //var rotation = Quaternion.Euler(0, tank.transform.eulerAngles.y, 0);
-        var pos = turret.transform.position - transform.forward * distance;
+        var pos = turret.transform.position - transform.forward * distance; 
         pos.y = turret.transform.position.y + height;
         transform.position = pos;
 
+        //Debug.Log(turret.transform.position + " / " + transform.position);
         Cursor.lockState = CursorLockMode.Locked;
         //Cursor.visible = true;
     }

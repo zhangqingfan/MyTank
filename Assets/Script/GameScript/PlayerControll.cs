@@ -9,7 +9,9 @@ public class PlayerControll : NetworkBehaviour
 {
     //[HideInInspector]
     public Canvas headCanvas;
-    public GameObject hpPrefab;
+    public Text headName;
+    public Image hpFrontImage;
+    public GameObject hpObj;
     public GameObject turret;
     public GameObject barrel;
     public GameObject barrelBlowbackPos;
@@ -22,6 +24,7 @@ public class PlayerControll : NetworkBehaviour
     public NetworkVariable<int> teamIndex = new NetworkVariable<int>();
     public NetworkVariable<int> currentHp = new NetworkVariable<int>();
     public NetworkVariable<int> MaxHp = new NetworkVariable<int>();
+    public NetworkVariable<int> shieldLevel = new NetworkVariable<int>();
 
     public float accelerateFactor;
     public float slowdownFactor;
@@ -44,13 +47,13 @@ public class PlayerControll : NetworkBehaviour
     public float depressionAngle;
     public float elevationAngle;
 
-    private void Start()
+    public void Start()
     {
-        maxSpeed = 4.0f;
+        maxSpeed = 8.0f;
 
-        accelerateFactor = 0.01f;
+        accelerateFactor = 0.04f;
         rotateSpeedLostFactor = 0.008f;
-        slowdownFactor = 0.02f;
+        slowdownFactor = 0.08f;
 
         rotateMaxSpeedRation = 0.6f;
         roateTurretFactor = 20f;
@@ -66,39 +69,40 @@ public class PlayerControll : NetworkBehaviour
         depressionAngle = -5.0f;
         elevationAngle = 30.0f;
 
-        teamIndex.OnValueChanged += ValueChange;
+        teamIndex.OnValueChanged += TeamIndexChange;
         pos.OnValueChanged += PositionChange;
         currentHp.OnValueChanged += HpChange;
 
-        //StartCoroutine(WaitSceneLoaded(0));
-        //to Ryan
-        //Debug.Log(MiniMapCameraCtrl.instance);   
-        ///MiniMapCameraCtrl.instance.UpdateMiniMapIcon(this);
-        //Useless
-        //InitPlayerInfo();
+        //Debug.Log("PlayerControll start");
     }
 
     void PositionChange(Vector3 oldValue, Vector3 newValue)
     {
-        Debug.Log(oldValue + "  /  " + newValue);
+        //Debug.Log(oldValue + "  /  " + newValue);
         transform.position = newValue;
     }
 
     void HpChange(int oldValue, int newValue)
     {
-        Debug.Log(oldValue + "  /  " + newValue);
-    }
-    
-    void ValueChange(int oldValue, int newValue)
-    {
-        //Debug.Log(oldValue + "  /  " + newValue);
-        GameUICtrl.instance.UpdateTeamSize();
+        hpFrontImage.fillAmount = (float)currentHp.Value / (float)MaxHp.Value;   
     }
 
-    private void OnEnable()
+    void TeamIndexChange(int oldValue, int newValue)
     {
-        Debug.Log("OnEnable");
+        if (GameUICtrl.instance == null || MiniMapCameraCtrl.instance == null)
+            return;
+        
+        GameUICtrl.instance.UpdateTeamSize();
+        GameUICtrl.instance.UpdateAllHpColor();
+        MiniMapCameraCtrl.instance.UpdateAllMiniMapIcon();
     }
+
+    override public void OnNetworkDespawn()
+    {
+        if(NetworkManager.Singleton.IsServer == true)
+            GameManager.instance.RemoveTank(NetworkObjectId);
+    }
+
     override public void OnNetworkSpawn()
     {
         turret = transform.Find("Main_Turre").gameObject;
@@ -109,21 +113,22 @@ public class PlayerControll : NetworkBehaviour
         rigidBody = transform.GetComponent<Rigidbody>();
 
         headCanvas = transform.Find("HeadCanvas").GetComponent<Canvas>();
+        hpObj = headCanvas.transform.Find("hp_green").gameObject;
+        hpFrontImage = headCanvas.transform.Find("hp_green").Find("hp_front").GetComponent<Image>();
+        headName = headCanvas.transform.Find("Name").GetComponent<Text>();
 
         //BUG, depends on the order: onNetworkSpawn / teamIndex.OnValueChanged
         //First initialize the existing tank in the scene, then initialize me.
-        if (MiniMapCameraCtrl.instance != null)
-            MiniMapCameraCtrl.instance.UpdateMiniMapIcon(this);
-
-        //BUG, How I know when scene is ready(as a client)?
         if (IsLocalPlayer == true)
         {
             headCanvas.transform.Find("Name").gameObject.SetActive(false);
             StartCoroutine(WaitSceneLoaded());
+            return;
         }
-            
-        //Useless
-        //InitPlayerInfo();
+
+        //MiniMapCameraCtrl.instance.UpdateMiniMapIcon(this);
+        //GameUICtrl.instance.UpdateHpColor(this);
+        //GameUICtrl.instance.UpdateTeamSize();
     }
 
     IEnumerator WaitSceneLoaded()
@@ -132,7 +137,11 @@ public class PlayerControll : NetworkBehaviour
             yield return null;
 
         RequestTeamIndexServerRpc();
+        StartAllCoroutine();
+    }
 
+    public virtual void StartAllCoroutine()
+    {
         StartCoroutine(UpdateScopeRatio());
         StartCoroutine(UpdateCurrentSpeed());
         StartCoroutine(UpdateRotation());
@@ -141,43 +150,34 @@ public class PlayerControll : NetworkBehaviour
         StartCoroutine(ShowFireCD());
     }
 
-
     [ServerRpc(Delivery = RpcDelivery.Reliable)]
     public void RequestTeamIndexServerRpc(ServerRpcParams serverParams = default)
     {
-        GameManager.instance.SpawnNewTank(serverParams.Receive.SenderClientId);
-    }
-
-    public void InitPlayerInfo()
-    {
-        return;
-        //TODO....!!!!
-        if(CameraCtrl.instance != null)
+        var netObj = NetworkManager.Singleton.SpawnManager.GetPlayerNetworkObject(serverParams.Receive.SenderClientId);
+        if (netObj == null)
         {
-            var hpPath = (CameraCtrl.instance.tankCtrl.teamIndex.Value == teamIndex.Value ? "UIPrefab/hp_green" : "UIPrefab/hp_red");
-            hpPrefab = GameManager.instance.GetInstance(hpPath);
+            Debug.Log("Can not find netobjId!!!");
+            return;
         }
+
+        Debug.Log("NetID:" + netObj.NetworkObjectId + " clientId:" + serverParams.Receive.SenderClientId);
+        GameManager.instance.AddTankTeam(netObj);
     }
 
     private void FixedUpdate()
     {
-        if (hpPrefab != null)
-        {
-            var y = (isScopeMode == false ? 0.7f : 0.9f);
-            hpPrefab.transform.position = WorldPosToScreePos(Camera.main, turret.transform.position + new Vector3(0, y, 0));
-        }
+        //var y = (isScopeMode == false ? 0.7f : 0.9f);
+        //hpPrefab.transform.position = WorldPosToScreePos(Camera.main, turret.transform.position + new Vector3(0, y, 0));
 
         moveDir.x = (Input.GetAxisRaw("Vertical") != 0 ? Input.GetAxisRaw("Vertical") : 0);
         moveDir.y = (Input.GetAxisRaw("Horizontal") != 0 ? Input.GetAxisRaw("Horizontal") : 0);
     }
 
     Vector3 euler = Vector3.zero;
-    void Update()
+    protected void Update()
     {
-        euler = Camera.main.transform.eulerAngles;
-        euler.x = headCanvas.transform.eulerAngles.x;
+        euler = headCanvas.transform.eulerAngles;
         euler.y = Camera.main.transform.eulerAngles.y;
-        euler.z = headCanvas.transform.eulerAngles.z;
         headCanvas.transform.eulerAngles = euler;
 
         if (IsLocalPlayer == false)
@@ -190,24 +190,16 @@ public class PlayerControll : NetworkBehaviour
             rigidBody.MovePosition(rigidBody.position - transform.forward * distance);
 
         if (Input.GetButton("Fire1") == true)
-            TryShoot(turret.transform.rotation);
+            TryShoot();
+
+        //var dir = (bulletStartPos.transform.position - barrel.transform.position).normalized;
+        //Debug.DrawRay(bulletStartPos.transform.position, dir, Color.red);
     }
 
-    public void UpdateHp(PlayerControll player)
-    {
-        //var image = player.hpPrefab.transform.Find("hp_front").GetComponent<Image>();
-        //image.fillAmount = (float)player.currentHp / (float)player.MaxHp;
-    }
-
-    void TryShoot(Quaternion shootDir) //does it really need??
+    protected void TryShoot() //does it really need??
     {
         if(Time.time - recentFireTime < fireCD)
-        {
-            //currentHp = currentHp - 1;
-            //currentHp = (currentHp > 0 ? currentHp : 0);
-            UpdateHp(this);
             return;
-        }
 
         recentFireTime = Time.time;
         StartCoroutine(BlowbackBarrel());
@@ -234,21 +226,22 @@ public class PlayerControll : NetworkBehaviour
     [ServerRpc(Delivery = RpcDelivery.Reliable)]
     public void RequestShootServerRpc()
     {
-        var bullet = GameManager.instance.GetInstance("ModelPrefab/Bullet");
-        bullet.transform.position = bulletStartPos.transform.position;
-        //Debug.Log(bullet.transform.position);
-        Vector3 euler = bulletStartPos.transform.rotation.eulerAngles;
-        euler.x = 0;
-        euler.z = 0;
-        bullet.transform.eulerAngles = euler;
-        bullet.GetComponent<NetworkObject>().Spawn();
-    }
+        //var bulletBase = GameManager.instance.ShowInstance("ModelPrefab/Bullet", bulletStartPos.transform.position, 0f);
+        var a = Resources.Load<GameObject>("ModelPrefab/Bullet");
+        var bullet = GameObject.Instantiate(a);
 
-    [ClientRpc(Delivery = RpcDelivery.Reliable)]
-    void SyncShootClientRpc(Quaternion shootDir,  Vector3 shootPos) 
-    { 
-    
-    }
+        var dir = (bulletStartPos.transform.position - barrel.transform.position).normalized;
+        bullet.transform.rotation = Quaternion.LookRotation(dir);
+        bullet.transform.position = bulletStartPos.transform.position;
+        bullet.GetComponent<Rigidbody>().velocity = bullet.transform.forward * 50f;
+
+        bullet.GetComponent<BulletCtrl>().teamIndex = teamIndex.Value;
+        bullet.GetComponent<BulletCtrl>().ownerNetObjId = NetworkObjectId;
+        bullet.GetComponent<BulletCtrl>().ownerClientid = OwnerClientId;
+        bullet.GetComponent<BulletCtrl>().bornTime = Time.time;
+
+        bullet.GetComponent<NetworkObject>().Spawn();
+    } 
 
     Vector3 WorldPosToScreePos(Camera cam, Vector3 worldPos)
     {
@@ -291,7 +284,6 @@ public class PlayerControll : NetworkBehaviour
         var delay = new WaitForSeconds(0.1f);  //Good way to avoid GC!
         while (true)
         {
-            Debug.Log(GameUICtrl.instance);
             GameUICtrl.instance.UpdateFireCD(Time.time - recentFireTime, fireCD);
             yield return delay;
         }
@@ -402,6 +394,7 @@ public class PlayerControll : NetworkBehaviour
             if (Input.GetKeyDown(KeyCode.LeftShift) == true)
             {
                 isScopeMode = !isScopeMode;
+                hpObj.SetActive(!isScopeMode);
                 yield return null;
                 continue;
             }
@@ -412,6 +405,7 @@ public class PlayerControll : NetworkBehaviour
                 if(isScopeMode == false)
                 {
                     isScopeMode = true;
+                    hpObj.SetActive(false);
                     yield return null;
                     continue;
                 }
@@ -428,6 +422,7 @@ public class PlayerControll : NetworkBehaviour
                 {
                     scopeRatio = 1;
                     isScopeMode = false;
+                    hpObj.SetActive(true);
                 }    
             }
 
@@ -435,17 +430,86 @@ public class PlayerControll : NetworkBehaviour
         }
     }
 
-    [ServerRpc(Delivery = RpcDelivery.Reliable)]
-    public void SendMessageServerRpc(string str)
+    public IEnumerator PlayEffect(string[] pathArray,  float[] durationArray, Transform parent, Vector3 localPosition = default)
     {
-        //Debug.Log("SendMessageServerRpc :" + str);
-        BroadcastMessageClientRpc(str);
+        var length = (pathArray.Length < durationArray.Length ? pathArray.Length : durationArray.Length);
+        
+        for(int i = 0; i < length; i++)
+        {
+            //Debug.Log(parent.transform.TransformPoint(localPosition) + " / " + localPosition);
+            var go = GameManager.instance.ShowInstance(pathArray[i], parent.transform.TransformPoint(localPosition), durationArray[i]);
+            go.transform.SetParent(parent);
+            yield return new WaitForSeconds(durationArray[i]);
+        }
     }
 
     [ClientRpc]
-    void BroadcastMessageClientRpc(string str)
+    public void TakeDamageClientRpc(Vector3 localPos, Vector3 dir)
     {
-        //Debug.Log("BroadcastMessageClientRpc :" + str);
-        GameUICtrl.instance.chatText.text += str;
+        var box = transform.GetComponent<BoxCollider>();
+
+        if(shieldLevel.Value > 0)
+        {
+            var go = GameManager.instance.ShowInstance("ModelPrefab/OnHitShield", box.transform.TransformPoint(localPos), 0.8f);
+            go.transform.rotation = Quaternion.LookRotation(dir);
+            go.transform.position -= dir * 0.3f;
+            go.transform.SetParent(box.transform);
+            return;
+        }
+
+        string[] pathArray = new string[] { "EffectPrefab/HitEffect0", "EffectPrefab/HitEffect1" };
+        float[] durationArray = new float[] { 1.5f, 2.5f };
+        StartCoroutine(PlayEffect(pathArray, durationArray, box.transform, localPos)); 
+    }
+
+    [ClientRpc]
+    public void DeathClientRpc(ulong netObjId, int rebornTime)
+    {
+        GameManager.instance.ShowInstance("EffectPrefab/Explosion", transform.position, 2.5f);
+        gameObject.SetActive(false);
+
+        if (IsLocalPlayer == false)
+            return;
+           
+        foreach(var net in NetworkManager.Singleton.SpawnManager.SpawnedObjectsList)
+        {
+            if (net.NetworkObjectId != netObjId)
+                continue;
+
+            var killerCtrl = net.GetComponent<PlayerControll>();
+            if (killerCtrl == null)
+                break;
+
+            CameraCtrl.instance.tankCtrl = killerCtrl;
+
+            string info = "YOU ARE KILLED BY PLAYER " + killerCtrl.headName.text;
+            GameUICtrl.instance.KillInfo.text = info;
+            GameUICtrl.instance.KillInfo.gameObject.SetActive(true);
+            
+            break;
+        }
+
+        GameUICtrl.instance.StartCoroutine(GameUICtrl.instance.CountDownRebornTime(rebornTime)); 
+    }
+
+    [ClientRpc]
+    public void RespawnClientRpc()
+    {
+        //todo...maybe some reborn effect
+
+        gameObject.SetActive(true);
+
+        if (IsLocalPlayer == false)
+            return;
+
+        GameUICtrl.instance.KillInfo.gameObject.SetActive(false);
+        GameUICtrl.instance.rebornTime.gameObject.SetActive(false);
+        CameraCtrl.instance.AttachLocalPlayer();
+        StartAllCoroutine();
+    }
+
+    public bool IsRobot()
+    {
+        return (headName.text == "Robot" ? true : false);
     }
 }

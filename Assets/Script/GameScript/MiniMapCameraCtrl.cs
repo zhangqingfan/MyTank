@@ -23,8 +23,6 @@ public class MiniMapCameraCtrl : MonoBehaviour
             myTankCtrl = p;
             break;
         }
-
-        UpdateAllMiniMapIcon();
     }
 
     public void UpdateAllMiniMapIcon()
@@ -40,7 +38,7 @@ public class MiniMapCameraCtrl : MonoBehaviour
             return;
 
         var icon = player.transform.Find("miniMapIcon");
-        string path = (player.teamIndex != myTankCtrl.teamIndex ? "Materials/PowerupHealth" : "Materials/PowerupShield");
+        string path = (player.teamIndex.Value != myTankCtrl.teamIndex.Value ? "Materials/PowerupHealth" : "Materials/PowerupShield");
         var mat = GameManager.instance.Load<Material>(path);
         icon.GetComponent<Renderer>().material = mat; 
     }
@@ -48,7 +46,7 @@ public class MiniMapCameraCtrl : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        var pos = myTankCtrl.transform.position;
+        var pos = myTankCtrl.transform.position; 
         pos.y = transform.position.y;
         transform.position = pos;
     }

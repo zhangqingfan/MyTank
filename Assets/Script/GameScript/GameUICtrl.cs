@@ -1,4 +1,4 @@
-using System.Collections;
+    using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -10,9 +10,12 @@ public class GameUICtrl : MonoBehaviour
     public InputField chatInput;
     public Text chatText;
     public ScrollRect scrollRect;
+    public Text KillInfo;
+    public Text rebornTime;
     public PlayerControll myTankCtrl;
     public string  localPlayerName = "";
     public Slider[] sliders = new Slider[2];
+    public Text[] scores = new Text[2];
 
     public RectTransform barrelPoint;
     public Text fireCDText;
@@ -24,8 +27,8 @@ public class GameUICtrl : MonoBehaviour
 
     private void Start()
     {
-        UpdateTeamSize();
-        
+        fireCDText = GameObject.Find("Canvas").transform.Find("FireCD").GetComponent<Text>();
+
         var players = GameObject.FindObjectsOfType<PlayerControll>();
         foreach (var p in players)
         {
@@ -36,8 +39,6 @@ public class GameUICtrl : MonoBehaviour
             localPlayerName = myTankCtrl.headCanvas.transform.Find("Name").GetComponent<Text>().text;
             break;
         }
-
-        fireCDText = GameObject.Find("Canvas").transform.Find("FireCD").GetComponent<Text>(); ;
     }
 
     public void UpdateTeamSize()
@@ -49,6 +50,26 @@ public class GameUICtrl : MonoBehaviour
         foreach(var p in players)
             sliders[p.teamIndex.Value].value += 1;
     }
+
+    public void UpdateAllHpColor()
+    {
+        if (myTankCtrl == null)
+            return;
+
+        var players = GameObject.FindObjectsOfType<PlayerControll>();
+        foreach (var p in players)
+            UpdateHpColor(p);
+    }
+
+    public void UpdateHpColor(PlayerControll player)
+    {
+        if (myTankCtrl == null)
+            return;
+
+        var hpColor = (player.teamIndex.Value == myTankCtrl.teamIndex.Value ? Color.green : Color.red);
+        player.hpFrontImage.color = hpColor;
+    }
+
 
     public void UpdateBarrelPoint(float angleX, float angleY)
     {
@@ -71,6 +92,22 @@ public class GameUICtrl : MonoBehaviour
         fireCDText.text = string.Format("{0:F1}", fireCD - (timeOffset));
     }
 
+    public IEnumerator CountDownRebornTime(int rebornTime)
+    {
+        var delay = new WaitForSeconds(1);
+        var countDown = rebornTime;
+        
+        this.rebornTime.gameObject.SetActive(true);
+        
+        while (countDown != 0)
+        {
+            this.rebornTime.text = countDown.ToString();
+            yield return delay;
+            countDown = countDown - 1;
+            countDown = (countDown < 0 ? 0 : countDown);
+        }
+    }
+
     // Update is called once per frame
     void Update()   
     {
@@ -81,7 +118,7 @@ public class GameUICtrl : MonoBehaviour
             if (chatInput.text != "")
             {
                 string str = "<color=green>" + localPlayerName + ":" + chatInput.text + "</color>" + "\n";
-                myTankCtrl.SendMessageServerRpc(str);
+                GameManager.instance.SendMessageServerRpc(str);
                 chatInput.text = "";
 
                 //Canvas.ForceUpdateCanvases();      

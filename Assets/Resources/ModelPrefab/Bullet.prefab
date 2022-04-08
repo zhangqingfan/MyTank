@@ -32,8 +32,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3262897003748345600}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.088, y: 0.145, z: 2.533}
-  m_LocalScale: {x: 0.03, y: 0.03, z: 0.15}
+  m_LocalPosition: {x: 0.088, y: 0.145, z: 2.5237}
+  m_LocalScale: {x: 0.25, y: 0.25, z: 1.15}
   m_Children:
   - {fileID: 3081195470941157460}
   m_Father: {fileID: 0}
@@ -116,7 +116,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
 --- !u!114 &3262897003748345605
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -184,7 +184,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fa8faa04f619b64ab8bedf91ef916a7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 10
+  speed: 160
+  teamIndex: 0
+  ownerNetObjId: 0
+  ownerClientid: 0
+  lastFramePos: {x: 0, y: 0, z: 0}
+  tempPos: {x: 0, y: 0, z: 0}
+  bornTime: 0
 --- !u!1001 &3262897004673507263
 PrefabInstance:
   m_ObjectHideFlags: 0

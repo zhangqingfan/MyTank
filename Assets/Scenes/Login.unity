@@ -106,15 +106,15 @@ NavMeshSettings:
   m_BuildSettings:
     serializedVersion: 2
     agentTypeID: 0
-    agentRadius: 0.5
-    agentHeight: 2
+    agentRadius: 7
+    agentHeight: 3.5
     agentSlope: 45
     agentClimb: 0.4
     ledgeDropHeight: 0
     maxJumpAcrossDistance: 0
     minRegionArea: 2
     manualCellSize: 0
-    cellSize: 0.16666667
+    cellSize: 2.3333333
     manualTileSize: 0
     tileSize: 256
     accuratePlacement: 0
@@ -483,6 +483,21 @@ MonoBehaviour:
       SourcePrefabToOverride: {fileID: 0}
       SourceHashToOverride: 0
       OverridingTargetPrefab: {fileID: 0}
+    - Override: 0
+      Prefab: {fileID: 2635490844231709181, guid: 5935e49dda6af59459ba32f6555f47c7, type: 3}
+      SourcePrefabToOverride: {fileID: 0}
+      SourceHashToOverride: 0
+      OverridingTargetPrefab: {fileID: 0}
+    - Override: 0
+      Prefab: {fileID: 887586149850195044, guid: 35c05e716f5516e468bc2e36b19baa9b, type: 3}
+      SourcePrefabToOverride: {fileID: 0}
+      SourceHashToOverride: 0
+      OverridingTargetPrefab: {fileID: 0}
+    - Override: 0
+      Prefab: {fileID: 855183000313016488, guid: a94cff50bd7487c47b5a2aa71fe18fcb, type: 3}
+      SourcePrefabToOverride: {fileID: 0}
+      SourceHashToOverride: 0
+      OverridingTargetPrefab: {fileID: 0}
     TickRate: 30
     ClientConnectionBufferTimeout: 10
     ConnectionApproval: 0
@@ -755,6 +770,7 @@ GameObject:
   m_Component:
   - component: {fileID: 763134397}
   - component: {fileID: 763134396}
+  - component: {fileID: 763134398}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -774,6 +790,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 829b90aae1a6b6645a4dbf1734c370b4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  respawnTime: 10
+  reshowTime: 10
+  myTankCtrl: {fileID: 0}
 --- !u!4 &763134397
 Transform:
   m_ObjectHideFlags: 0
@@ -788,6 +807,22 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 5
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &763134398
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 763134395}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 1284236782
+  AlwaysReplicateAsRoot: 0
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2635490843880275709}
   - component: {fileID: 2635490843880275706}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BlobShadow
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -95,7 +95,9 @@ GameObject:
   - component: {fileID: 2635490844231709179}
   - component: {fileID: 2635490844231709178}
   - component: {fileID: 4227930051114737842}
-  m_Layer: 0
+  - component: {fileID: -1181013391508776543}
+  - component: {fileID: 1191043356627707523}
+  m_Layer: 8
   m_Name: Health
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -111,7 +113,7 @@ Transform:
   m_GameObject: {fileID: 2635490844231709181}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: -0.000000059604645, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 0.5}
+  m_LocalScale: {x: 2, y: 2, z: 2}
   m_Children:
   - {fileID: 2529225877143774562}
   - {fileID: 2635490844341969785}
@@ -175,7 +177,7 @@ BoxCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2635490844231709181}
   m_Material: {fileID: 0}
-  m_IsTrigger: 0
+  m_IsTrigger: 1
   m_Enabled: 1
   serializedVersion: 2
   m_Size: {x: 1, y: 1, z: 1}
@@ -199,6 +201,34 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorControllerStateOnDisable: 0
+--- !u!114 &-1181013391508776543
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2635490844231709181}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  GlobalObjectIdHash: 951099334
+  AlwaysReplicateAsRoot: 0
+  DontDestroyWithOwner: 0
+  AutoObjectParentSync: 1
+--- !u!114 &1191043356627707523
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2635490844231709181}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c227cef9163ab2b4ebaf5673fcd06af7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &2635490844341969784
 GameObject:
   m_ObjectHideFlags: 0
@@ -208,7 +238,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2635490844341969785}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: GameObject
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -300,6 +330,10 @@ PrefabInstance:
     - target: {fileID: 919132149155446097, guid: 46ca3b1992a32b44c8e8043f19cd34ca, type: 3}
       propertyPath: m_Name
       value: PowerupHealth
+      objectReference: {fileID: 0}
+    - target: {fileID: 919132149155446097, guid: 46ca3b1992a32b44c8e8043f19cd34ca, type: 3}
+      propertyPath: m_Layer
+      value: 8
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 46ca3b1992a32b44c8e8043f19cd34ca, type: 3}
